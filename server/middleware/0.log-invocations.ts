@@ -4,6 +4,11 @@
 // entrypoint rewrites req.url BEFORE this runs, so `url` is post-restoration;
 // a failed restoration is visible as a url still carrying the `-isr` suffix,
 // and `matches` preserves the raw carrier header either way.
+//
+// The '0.' filename prefix is load-bearing: Nitro runs server middleware in
+// filename order, and basic-auth.ts throwing a 401 aborts the chain — this
+// must sort before it or the unauthenticated ISR population attempts on
+// /secret (the P3 requests this test bed exists to observe) go unlogged.
 export default defineEventHandler((event) => {
   const h = event.node.req.headers
   console.log(

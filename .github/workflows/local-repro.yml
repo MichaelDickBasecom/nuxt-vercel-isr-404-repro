@@ -1,0 +1,27 @@
+name: local repro
+# Guards the repo's central deterministic proof: builds the Vercel preset and
+# runs scripts/local-repro.mjs, which exits non-zero if ANY invocation case
+# diverges from the behavior the docs claim — including a BUG case starting
+# to pass (i.e. upstream fixed the fallback gap and the docs are now stale).
+# The weekly run catches divergence that lands without a push here.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * 1'
+
+jobs:
+  repro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install (lockfile-pinned — the docs' claims are version-anchored)
+        run: bun install --frozen-lockfile
+      - name: Build Vercel preset
+        run: NITRO_PRESET=vercel bun run build
+      - name: Run deterministic P1 repro
+        run: node scripts/local-repro.mjs

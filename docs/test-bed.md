@@ -19,7 +19,7 @@ page print what the server saw.
 
 | Path | Purpose |
 |---|---|
-| `/` `/about` | controls |
+| `/` `/about` | controls (`/` = wildcard-ISR shape from the field reports; `/about` = plain SSR, exempted via `isr: false`) |
 | `/schedule` `/users/:id` `/catchall/**` + `/catchall/special` `/nested/deep` | P1 route-shape variants (static, dynamic, catch-all, overlapping, nested) |
 | `/schedule-pq` `/query` | `passQuery` / `allowQuery` variants |
 | `/flaky` `/flaky-ttl` | [P2](./p2-app-404.md) (`isr: true` vs finite TTL) |
@@ -30,7 +30,7 @@ page print what the server saw.
 
 | Script | What it does |
 |---|---|
-| `scripts/local-repro.mjs` | drives the built Vercel function with platform-shaped requests — proves [P1](./p1-carrier-loss.md) deterministically, no deploy |
+| `scripts/local-repro.mjs` | drives the built Vercel function with platform-shaped requests — proves [P1](./p1-carrier-loss.md) deterministically, no deploy. Exits non-zero if any case diverges from the documented behavior; CI (`.github/workflows/local-repro.yml`) runs it on every push and weekly, so a nitropack bump that changes the mechanism can't land unnoticed |
 | `scripts/poison-demo.sh <url>` | populate → purge → re-populate cycles — [P2](./p2-app-404.md) |
 | `scripts/auth-demo.sh <url>` | availability + confidentiality failure — [P3](./p3-auth.md) |
 | `scripts/probe.sh <url> [--burst\|--watch N]` | cold-cache race / revalidation hunt for P1 in the wild |
@@ -42,9 +42,10 @@ page print what the server saw.
 validates status + content, and returns a JSON verdict. On anomaly it captures
 the evidence embedded in the poisoned page itself (`isrLeak` flag, SSR-time
 `serverSaw`/`rawReqUrl`/`routeMatches`, body snippet).
-`server/middleware/log-invocations.ts` logs one `ISRDBG-REQ` line per
+`server/middleware/0.log-invocations.ts` logs one `ISRDBG-REQ` line per
 invocation (post-restoration URL + raw carrier header), making revalidation
-invocations visible. `.github/workflows/isr-monitor.yml` probes every 10 min
+invocations visible; the `0.` prefix makes it run before `basic-auth.ts` can
+401-abort the chain, so P3 population attempts are logged too. `.github/workflows/isr-monitor.yml` probes every 10 min
 and fails the run (→ email) on any anomaly.
 
 ```sh

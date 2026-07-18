@@ -34,6 +34,10 @@ export default defineNuxtConfig({
     // A bare '/**' ISR rule would silently cache API responses too
     // (docs/maintainers.md); send /api/** to the uncached __fallback instead.
     '/api/**': { isr: false },
+    // True non-ISR control: without this exemption the '/**' wildcard would
+    // ISR-cache /about too and it would not be the "plain SSR" baseline the
+    // probes compare against.
+    '/about': { isr: false },
 
     // ── cause P1 route-shape variants (docs/p1-carrier-loss.md) ──
     '/schedule': { isr: 300 }, // static baseline (nuxt#33316)

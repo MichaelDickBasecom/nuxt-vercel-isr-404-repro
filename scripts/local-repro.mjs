@@ -4,6 +4,12 @@
 // then sends it the request shapes Vercel's router/prerender-cache produce.
 //
 // Run:  NITRO_PRESET=vercel bun run build && node scripts/local-repro.mjs
+//
+// Exit code: 0 only when every case matches its documented expectation
+// (CI runs this — .github/workflows/local-repro.yml). A BUG case suddenly
+// returning 200 also fails the run: it means upstream changed behavior and
+// the docs' version-anchored claims need re-verifying.
+import { existsSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -12,6 +18,10 @@ const fnEntry = resolve(
   import.meta.dirname,
   '../.vercel/output/functions/__fallback.func/index.mjs',
 )
+if (!existsSync(fnEntry)) {
+  console.error('No Vercel build found — run: NITRO_PRESET=vercel bun run build')
+  process.exit(1)
+}
 const listener = (await import(pathToFileURL(fnEntry).href)).default
 const server = createServer(listener)
 await new Promise((r) => server.listen(0, r))
@@ -57,12 +67,14 @@ const cases = [
 ]
 
 let mechanismConfirmed = false
+let unexpected = 0
 for (const c of cases) {
   const res = await fetch(base + c.url, { headers: c.headers })
   const body = await res.text()
   const notFound = body.match(/Page not found: [^<"]*/)?.[0]
   const ok = res.status === 200
   if (!ok && !c.expect200) mechanismConfirmed = true
+  if (ok !== c.expect200) unexpected++
   console.log(
     `${ok === c.expect200 ? 'as-expected' : 'UNEXPECTED '} ` +
       `status=${res.status}  ${c.name}` +
@@ -78,4 +90,11 @@ console.log(
         'x-vercel-cache: HIT until expiration.'
     : '\nMechanism NOT reproduced — URL restoration succeeded in every case.',
 )
+if (unexpected > 0) {
+  console.error(
+    `\n${unexpected} case(s) diverged from the documented behavior — ` +
+      're-verify the docs against the lockfile-resolved nitropack version.',
+  )
+}
 server.close()
+process.exit(unexpected > 0 ? 1 : 0)
