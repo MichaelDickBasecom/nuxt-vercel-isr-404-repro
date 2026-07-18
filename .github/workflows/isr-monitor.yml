@@ -1,0 +1,24 @@
+name: ISR monitor
+# Probes the deployed app's self-monitor endpoint every 10 minutes.
+# The endpoint (server/api/monitor.get.ts) fetches all ISR routes through
+# Vercel's routing/cache layer and validates them; a failed run here means
+# an ISR anomaly (cached 404 / wrong content) — GitHub then notifies the
+# repo owner by email. Runs history = long-term anomaly log.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe /api/monitor
+        run: |
+          out=$(curl -sS --max-time 120 https://nuxt-vercel-isr-404-repro.vercel.app/api/monitor)
+          echo "$out" | jq .
+          if [ "$(echo "$out" | jq -r .ok)" != "true" ]; then
+            echo "::error::ISR anomaly detected"
+            echo "$out" | jq '.results[] | select(.ok|not)'
+            exit 1
+          fi
