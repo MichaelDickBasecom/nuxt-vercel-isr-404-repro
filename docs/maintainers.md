@@ -6,8 +6,9 @@ Everything here is demonstrated in this repo; statuses checked 2026-07-18.
 
 ### 1. Make ISR URL restoration fail-safe
 
-Add a fallback chain — the P1 gap, with no existing issue or PR anywhere,
-including nitro v3 `main`.
+**Filed 2026-07-18: [nitro#4446](https://github.com/nitrojs/nitro/issues/4446).**
+Add a fallback chain — the P1 gap, previously with no existing issue or PR
+anywhere, including nitro v3 `main`.
 Today the runtime trusts a single carrier and gives up *silently*: header
 present but missing `__isr_route` → the query is never consulted; bare
 invocation → no recovery at all. In priority order:
@@ -38,7 +39,8 @@ query string), [nitro#4047](https://github.com/nitrojs/nitro/issues/4047)
 
 ### 2. Fix observability-routes generation for ISR rules
 
-No existing issue post-2.12.6. `generateFunctionFiles` decides whether to skip
+**Filed 2026-07-18: [nitro#4447](https://github.com/nitrojs/nitro/issues/4447).**
+Previously no existing issue post-2.12.6. `generateFunctionFiles` decides whether to skip
 an o11y function by calling `_getRouteRules(route.src)` where `route.src` is
 the *compiled regex string* (e.g. `/users/(?<id>[^/]+)`), not a request path —
 so dynamic routes get **both** a plain function and an `-isr` function for the
@@ -131,7 +133,7 @@ not auth — don't cite it for this.)
 | [nitro#3844](https://github.com/nitrojs/nitro/issues/3844) | fixed, 2.13.0 | ISR cache ignored dynamic route params |
 | [nitro#4408](https://github.com/nitrojs/nitro/issues/4408) + [PR#4409](https://github.com/nitrojs/nitro/pull/4409) | **open**, PR unreviewed | header branch drops the entire query string |
 | [nitro#4047](https://github.com/nitrojs/nitro/issues/4047) | **open** | `_payload.json-isr` 404s in console on ISR routes |
-| nitro v3 `main` (`presets/vercel/runtime/isr.ts`, via [PR#3851](https://github.com/nitrojs/nitro/pull/3851)) | **gap persists** | header-without-`__isr_route` returns no result, **no fallback**; PR#4409 doesn't add one |
+| nitro v3 `main` (`presets/vercel/runtime/isr.ts`, via [PR#3851](https://github.com/nitrojs/nitro/pull/3851)) | **gap persists** | header-without-`__isr_route` returns no result, **no fallback**; PR#4409 doesn't add one — tracked in [nitro#4446](https://github.com/nitrojs/nitro/issues/4446) |
 
 ### Build generation / observability routes
 
@@ -197,16 +199,18 @@ from 2024, showing the class predates the `-isr` naming — a visible
 
 ## Gaps — findings here with no existing issue (verified by search)
 
-1. **No issue/PR anywhere adds a fallback chain** (header → query →
+1. ~~**No issue/PR anywhere adds a fallback chain** (header → query →
    `-isr`-strip) to Nitro's ISR URL restoration — the P1 gap on 2.13.4 *and*
-   v3 `main`. → file with `scripts/local-repro.mjs` (item 1).
+   v3 `main`.~~ **Filed 2026-07-18:
+   [nitro#4446](https://github.com/nitrojs/nitro/issues/4446)** (item 1).
 2. **No issue for auth/401 breaking ISR population** (P3 availability) **nor
    for the ISR shared cache serving auth-gated content** (P3 confidentiality)
    — in nitro, nuxt, or next.js. → item 3.
 3. **No current issue for `'/**': { isr }` ISR-caching `/api/**`** (closest:
    [nuxt#19353](https://github.com/nuxt/nuxt/issues/19353), closed 2023).
-4. **No issue for the post-2.12.6 o11y generation bugs** — item 2;
-   `scripts/inspect-build.mjs` is the evidence.
+4. ~~**No issue for the post-2.12.6 o11y generation bugs**~~ **Filed
+   2026-07-18: [nitro#4447](https://github.com/nitrojs/nitro/issues/4447)**
+   (item 2; `scripts/inspect-build.mjs` is the evidence).
 
 ---
 

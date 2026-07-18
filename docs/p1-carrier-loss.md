@@ -39,7 +39,7 @@ indefinitely** — a poisoned route does not heal until redeploy.
 |---|---|---|
 | 2.12.6 | the `<route>-isr` rename exposed a missing capture group for non-wildcard rules → the internal path leaked | fixed in **2.12.7** ([nitro#3595](https://github.com/nitrojs/nitro/pull/3595)) |
 | 2.12.6–2.12.9 | with `passQuery`/`allowQuery`, **Vercel stops sending `x-now-route-matches`** — and these runtimes had no other carrier → **every direct hit fails** | fixed in **2.13.0** ([nitro#3539](https://github.com/nitrojs/nitro/pull/3539)) |
-| 2.13.4 & v3 `main` | single-carrier dependency, no fallback chain (the gaps above) | **open** — no upstream issue yet; adjacent: [nitro#4408](https://github.com/nitrojs/nitro/issues/4408), [nitro#4047](https://github.com/nitrojs/nitro/issues/4047) |
+| 2.13.4 & v3 `main` | single-carrier dependency, no fallback chain (the gaps above) | **open** — filed as [nitro#4446](https://github.com/nitrojs/nitro/issues/4446); adjacent: [nitro#4408](https://github.com/nitrojs/nitro/issues/4408), [nitro#4047](https://github.com/nitrojs/nitro/issues/4047) |
 
 Full lineage with fix commits and open PRs:
 [references](./maintainers.md#p1-lineage-nitro-carrier-handling).
